@@ -1,0 +1,58 @@
+@{
+    ViewData["Title"] = "Audit Logs";
+}
+
+<h2 class="mb-4">Audit Logs</h2>
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <input type="date" id="filterFrom" class="form-control" placeholder="From" />
+    </div>
+    <div class="col-md-3">
+        <input type="date" id="filterTo" class="form-control" placeholder="To" />
+    </div>
+</div>
+
+<table id="auditTable" class="table table-striped table-sm w-100">
+    <thead>
+        <tr>
+            <th>Timestamp</th>
+            <th>Action</th>
+            <th>User</th>
+            <th>Entity</th>
+            <th>IP address</th>
+            <th>Result</th>
+            <th>Message</th>
+        </tr>
+    </thead>
+</table>
+
+@section Scripts {
+    <script>
+        $(function () {
+            const table = $('#auditTable').DataTable({
+                serverSide: true,
+                processing: true,
+                order: [[0, 'desc']],
+                ajax: {
+                    url: '@Url.Action("Grid", "AuditLogs")',
+                    data: function (d) {
+                        d.from = $('#filterFrom').val();
+                        d.to = $('#filterTo').val();
+                    }
+                },
+                columns: [
+                    { data: 'timestamp', render: d => new Date(d).toLocaleString() },
+                    { data: 'actionName' },
+                    { data: 'userName', defaultContent: '-' },
+                    { data: 'entityName', defaultContent: '-', orderable: false },
+                    { data: 'ipAddress', defaultContent: '-', orderable: false },
+                    { data: 'succeeded', render: s => s ? '<span class="badge bg-success">Success</span>' : '<span class="badge bg-danger">Failed</span>' },
+                    { data: 'message', defaultContent: '-', orderable: false }
+                ]
+            });
+
+            $('#filterFrom, #filterTo').on('change', () => table.ajax.reload());
+        });
+    </script>
+}

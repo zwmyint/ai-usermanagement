@@ -1,0 +1,84 @@
+@model IReadOnlyList<UserManagement.UI.Contracts.RoleDto>
+@{
+    ViewData["Title"] = "Manage Roles";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Manage Roles</h2>
+    <button type="button" class="btn btn-primary" id="btnCreateRole">New role</button>
+</div>
+
+@Html.AntiForgeryToken()
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>System role</th>
+            <th>Users</th>
+            <th class="text-end">Actions</th>
+        </tr>
+    </thead>
+    <tbody id="rolesBody">
+        @foreach (var role in Model)
+        {
+            <tr data-id="@role.Id">
+                <td>@role.Name</td>
+                <td>@role.Description</td>
+                <td>@(role.IsSystemRole ? "Yes" : "No")</td>
+                <td>@role.UserCount</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary btn-edit-role" data-id="@role.Id">Edit</button>
+                    @if (!role.IsSystemRole)
+                    {
+                        <button class="btn btn-sm btn-outline-danger btn-delete-role" data-id="@role.Id">Delete</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="roleModalContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getAntiForgeryToken() { return $('input[name="__RequestVerificationToken"]').first().val(); }
+
+        function showRoleModal(html) {
+            $('#roleModalContent').html(html);
+            $('#roleModal').modal('show');
+        }
+
+        $('#btnCreateRole').on('click', function () {
+            $.get('@Url.Action("Create", "Roles")', showRoleModal);
+        });
+
+        $(document).on('click', '.btn-edit-role', function () {
+            const id = $(this).data('id');
+            $.get(`/Admin/Roles/${id}/Edit`, showRoleModal);
+        });
+
+        $(document).on('click', '.btn-delete-role', function () {
+            const id = $(this).data('id');
+            if (!confirm('Delete this role?')) return;
+            $.post({ url: `/Admin/Roles/${id}/Delete`, data: { __RequestVerificationToken: getAntiForgeryToken() } })
+                .done(() => location.reload())
+                .fail(xhr => alert(xhr.responseJSON?.message || 'Delete failed.'));
+        });
+
+        $(document).on('submit', '#roleForm', function (e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            const url = id ? `/Admin/Roles/${id}/Edit` : '@Url.Action("Create", "Roles")';
+            $.post(url, $(this).serialize())
+                .done(() => { $('#roleModal').modal('hide'); location.reload(); })
+                .fail(xhr => $('#roleForm').prepend(`<div class="alert alert-danger">${xhr.responseJSON?.message || 'Save failed.'}</div>`));
+        });
+    </script>
+}

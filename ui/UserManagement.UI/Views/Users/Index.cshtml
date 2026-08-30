@@ -1,0 +1,165 @@
+@{
+    ViewData["Title"] = "Manage Users";
+    var canWrite = User.IsInRole("Admin") || User.IsInRole("Manager");
+    var canDelete = User.IsInRole("Admin");
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Manage Users</h2>
+    @if (canWrite)
+    {
+        <button type="button" class="btn btn-primary" id="btnCreateUser">
+            <i class="bi bi-plus-lg"></i> New user
+        </button>
+    }
+</div>
+
+@Html.AntiForgeryToken()
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <select id="filterRole" class="form-select">
+            <option value="">All roles</option>
+            @foreach (var role in (IReadOnlyList<UserManagement.UI.Contracts.RoleDto>)ViewBag.Roles)
+            {
+                <option value="@role.Name">@role.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select id="filterActive" class="form-select">
+            <option value="">Active &amp; Inactive</option>
+            <option value="true">Active only</option>
+            <option value="false">Inactive only</option>
+        </select>
+    </div>
+</div>
+
+<table id="usersTable" class="table table-striped table-hover align-middle w-100">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Full name</th>
+            <th>Roles</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th class="text-end">Actions</th>
+        </tr>
+    </thead>
+</table>
+
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="userModalContent">
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getAntiForgeryToken() {
+            return $('input[name="__RequestVerificationToken"]').val();
+        }
+
+        function showModal(html) {
+            $('#userModalContent').html(html);
+            $('#userModal').modal('show');
+        }
+
+        function reloadTable() {
+            $('#usersTable').DataTable().ajax.reload(null, false);
+        }
+
+        $(function () {
+            const table = $('#usersTable').DataTable({
+                serverSide: true,
+                processing: true,
+                ajax: {
+                    url: '@Url.Action("Grid", "Users")',
+                    data: function (d) {
+                        d.role = $('#filterRole').val();
+                        d.isActive = $('#filterActive').val();
+                    }
+                },
+                columns: [
+                    { data: 'userName' },
+                    { data: 'email' },
+                    { data: 'fullName' },
+                    { data: 'roles', orderable: false, render: r => (r || []).map(x => `<span class="badge bg-secondary me-1">${x}</span>`).join('') },
+                    { data: 'isActive', render: a => a ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>' },
+                    { data: 'createdAt', render: d => new Date(d).toLocaleDateString() },
+                    {
+                        data: 'id', orderable: false, className: 'text-end',
+                        render: (id, type, row) => {
+                            const canWrite = @Json.Serialize(canWrite);
+                            const canDelete = @Json.Serialize(canDelete);
+                            let html = '';
+                            if (canWrite) {
+                                html += `<button class="btn btn-sm btn-outline-primary btn-edit" data-id="${id}">Edit</button>
+                            <button class="btn btn-sm btn-outline-${row.isActive ? 'warning' : 'success'} btn-toggle" data-id="${id}" data-active="${row.isActive}">${row.isActive ? 'Deactivate' : 'Activate'}</button>`;
+                            }
+                            if (canDelete) {
+                                html += `<button class="btn btn-sm btn-outline-danger btn-delete" data-id="${id}">Delete</button>`;
+                            }
+                            return html;
+                        }
+                    }
+                ]
+            });
+
+            $('#filterRole, #filterActive').on('change', () => table.ajax.reload());
+
+            $('#btnCreateUser').on('click', function () {
+                $.get('@Url.Action("Create", "Users")', showModal);
+            });
+
+            $('#usersTable').on('click', '.btn-edit', function () {
+                const id = $(this).data('id');
+                $.get(`/Admin/Users/${id}/Edit`, showModal);
+            });
+
+            $('#usersTable').on('click', '.btn-toggle', function () {
+                const id = $(this).data('id');
+                const isActive = $(this).data('active') === true || $(this).data('active') === 'true';
+                if (!confirm(`Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this user?`)) return;
+                $.post({
+                    url: `/Admin/Users/${id}/ToggleActive`,
+                    data: { isActive: !isActive, __RequestVerificationToken: getAntiForgeryToken() }
+                }).done(() => reloadTable()).fail(xhr => alert(xhr.responseJSON?.message || 'Action failed.'));
+            });
+
+            $('#usersTable').on('click', '.btn-delete', function () {
+                const id = $(this).data('id');
+                if (!confirm('Delete this user? This cannot be undone.')) return;
+                $.post({
+                    url: `/Admin/Users/${id}/Delete`,
+                    data: { __RequestVerificationToken: getAntiForgeryToken() }
+                }).done(() => reloadTable()).fail(xhr => alert(xhr.responseJSON?.message || 'Delete failed.'));
+            });
+
+            $(document).on('submit', '#createUserForm', function (e) {
+                e.preventDefault();
+                $.post('@Url.Action("Create", "Users")', $(this).serialize())
+                    .done(() => { $('#userModal').modal('hide'); reloadTable(); })
+                    .fail(xhr => showFormErrors('#createUserForm', xhr));
+            });
+
+            $(document).on('submit', '#editUserForm', function (e) {
+                e.preventDefault();
+                const id = $(this).data('id');
+                const roles = $(this).find('select[name="roles"]').val() || [];
+
+                $.post(`/Admin/Users/${id}/Edit`, $(this).serialize())
+                    .then(() => $.post({ url: `/Admin/Users/${id}/Roles`, traditional: true, data: { roles: roles, __RequestVerificationToken: getAntiForgeryToken() } }))
+                    .then(() => { $('#userModal').modal('hide'); reloadTable(); })
+                    .catch(xhr => showFormErrors('#editUserForm', xhr));
+            });
+
+            function showFormErrors(formSelector, xhr) {
+                const msg = xhr.responseJSON?.message || xhr.responseJSON?.title || 'The request could not be completed.';
+                $(formSelector).prepend(`<div class="alert alert-danger">${msg}</div>`);
+            }
+        });
+    </script>
+}

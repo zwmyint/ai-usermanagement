@@ -1,0 +1,248 @@
+@model UserManagement.UI.ViewModels.Home.HomeIndexViewModel
+@{
+    ViewData["Title"] = "Home Page";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var activity = Model.Dashboard?.MyActivity;
+    var stats = Model.Dashboard?.AdminStats;
+
+    Func<DateTime?, string> when = value => value.HasValue ? value.Value.ToLocalTime().ToString("g") : "—";
+}
+
+<div class="text-center py-5">
+    <h1 class="display-4">User Management</h1>
+    <p class="lead">A clean-architecture ASP.NET Core sample: JWT-secured Web API + Bootstrap MVC front end.</p>
+    @if (!isAuthenticated)
+    {
+        <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg me-2">Sign in</a>
+        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary btn-lg">Create an account</a>
+    }
+    else
+    {
+        <a asp-controller="Profile" asp-action="Index" class="btn btn-primary btn-lg">Go to my profile</a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Users" asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Manage users</a>
+        }
+    }
+</div>
+
+@if (isAuthenticated)
+{
+    <hr class="my-4" />
+
+    @if (Model.DashboardUnavailable)
+    {
+        <div class="alert alert-warning" role="alert">
+            Dashboard data is currently unavailable — the API could not be reached. Please try again later.
+        </div>
+    }
+    else if (Model.Dashboard is not null)
+    {
+        <section class="mb-5">
+            <h2 class="h4 mb-3">My sign-in activity</h2>
+            <div class="row g-3">
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted mb-2">Last login</h6>
+                            <p class="card-text fs-6 mb-0">@when(activity!.LastLoginAt)</p>
+                            @if (!string.IsNullOrWhiteSpace(activity.LastLoginIp))
+                            {
+                                <small class="text-muted">from @activity.LastLoginIp</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted mb-2">Previous login</h6>
+                            <p class="card-text fs-6 mb-0">@when(activity.PreviousLoginAt)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted mb-2">Last failed sign-in</h6>
+                            <p class="card-text fs-6 mb-0">@when(activity.LastFailedLoginAt)</p>
+                            @if (!string.IsNullOrWhiteSpace(activity.LastFailedLoginIp))
+                            {
+                                <small class="text-muted">from @activity.LastFailedLoginIp</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted mb-2">Total sign-ins</h6>
+                            <p class="card-text fs-4 fw-semibold mb-0">@activity.TotalLogins</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        @if (stats is not null)
+        {
+            <section class="mb-4">
+                <h2 class="h4 mb-3">Admin dashboard</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card text-bg-primary h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2">Total users</h6>
+                                <p class="display-6 mb-0">@stats.TotalUsers</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0">
+                                <a asp-controller="Users" asp-action="Index" class="link-light small">Manage users</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card text-bg-success h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2">Active users</h6>
+                                <p class="display-6 mb-0">@stats.ActiveUsers</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card text-bg-secondary h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2">Inactive users</h6>
+                                <p class="display-6 mb-0">@stats.InactiveUsers</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card text-bg-dark h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2">Roles</h6>
+                                <p class="display-6 mb-0">@stats.TotalRoles</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0">
+                                <a asp-controller="Roles" asp-action="Index" class="link-light small">Manage roles</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">Sign-ins (24h)</h6>
+                                <p class="fs-3 fw-semibold mb-0">@stats.LoginsLast24Hours</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">Sign-ins (7 days)</h6>
+                                <p class="fs-3 fw-semibold mb-0">@stats.LoginsLast7Days</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">Failed sign-ins (24h)</h6>
+                                <p class="fs-3 fw-semibold mb-0 @(stats.FailedLoginsLast24Hours > 0 ? "text-danger" : "")">@stats.FailedLoginsLast24Hours</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">Audit log entries</h6>
+                                <p class="fs-3 fw-semibold mb-0">@stats.TotalAuditLogs</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0">
+                                <a asp-controller="AuditLogs" asp-action="Index" class="small">View audit logs</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-lg-5">
+                        <div class="card h-100">
+                            <div class="card-header">Users per role</div>
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Role</th>
+                                            <th scope="col" class="text-end">Users</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (stats.RoleBreakdown.Count == 0)
+                                        {
+                                            <tr><td colspan="2" class="text-muted">No roles defined.</td></tr>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var role in stats.RoleBreakdown)
+                                            {
+                                                <tr>
+                                                    <td>@role.RoleName</td>
+                                                    <td class="text-end">@role.UserCount</td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="card h-100">
+                            <div class="card-header">Recently registered users</div>
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">User</th>
+                                            <th scope="col">Roles</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Registered</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (stats.RecentUsers.Count == 0)
+                                        {
+                                            <tr><td colspan="4" class="text-muted">No users yet.</td></tr>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var user in stats.RecentUsers)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        @user.UserName
+                                                        <div class="small text-muted">@user.Email</div>
+                                                    </td>
+                                                    <td>@(user.Roles.Count > 0 ? string.Join(", ", user.Roles) : "—")</td>
+                                                    <td>
+                                                        <span class="badge @(user.IsActive ? "text-bg-success" : "text-bg-secondary")">
+                                                            @(user.IsActive ? "Active" : "Inactive")
+                                                        </span>
+                                                    </td>
+                                                    <td>@user.CreatedAt.ToLocalTime().ToString("g")</td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        }
+    }
+}

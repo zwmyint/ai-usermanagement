@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/UserManagement.API/UserManagement.API.csproj" />
+    <Project Path="src/UserManagement.Application/UserManagement.Application.csproj" />
+    <Project Path="src/UserManagement.Domain/UserManagement.Domain.csproj" />
+    <Project Path="src/UserManagement.Infrastructure/UserManagement.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/UserManagement.API.IntegrationTests/UserManagement.API.IntegrationTests.csproj" />
+    <Project Path="tests/UserManagement.Application.UnitTests/UserManagement.Application.UnitTests.csproj" />
+    <Project Path="tests/UserManagement.Infrastructure.UnitTests/UserManagement.Infrastructure.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/ui/">
+    <Project Path="ui/UserManagement.UI/UserManagement.UI.csproj" />
+  </Folder>
+</Solution>
