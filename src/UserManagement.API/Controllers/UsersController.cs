@@ -47,6 +47,20 @@ public class UsersController : ControllerBase
         return Ok(ApiResponse<UserDto>.Ok(user, "User updated."));
     }
 
+    [HttpPost("{id:guid}/profile-picture")]
+    [Authorize(Policy = "UsersWrite")]
+    public async Task<ActionResult<ApiResponse<UserDto>>> UploadProfilePicture(
+        Guid id, [FromForm] IFormFile profilePicture, CancellationToken ct)
+    {
+        if (profilePicture.Length == 0)
+            return BadRequest(ApiResponse.Fail("A profile picture is required.", traceId: HttpContext.TraceIdentifier));
+
+        await using var image = profilePicture.OpenReadStream();
+        var user = await _userService.UpdateProfilePictureAsync(
+            id, image, profilePicture.FileName, HttpContext.ToAuditContext(), ct);
+        return Ok(ApiResponse<UserDto>.Ok(user, "Profile picture updated."));
+    }
+
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = "UsersDelete")]
     public async Task<ActionResult<ApiResponse>> Delete(Guid id, CancellationToken ct)

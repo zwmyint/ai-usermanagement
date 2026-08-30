@@ -8,7 +8,7 @@
     <h5 class="modal-title">Edit user</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
-<form id="editUserForm" data-id="@Model.Id">
+<form id="editUserForm" data-id="@Model.Id" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
     <input asp-for="Id" type="hidden" />
     <div class="modal-body">
@@ -29,6 +29,11 @@
         <div class="mb-3">
             <label asp-for="PhoneNumber" class="form-label"></label>
             <input asp-for="PhoneNumber" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="ProfilePicture" class="form-label">Replace profile picture</label>
+            <input asp-for="ProfilePicture" class="form-control" accept="image/jpeg,image/png,image/webp" />
+            <div class="form-text">Optional JPEG, PNG, or WebP image; maximum 2 MB.</div>
         </div>
         <div class="mb-3 form-check">
             <input asp-for="IsActive" class="form-check-input" />

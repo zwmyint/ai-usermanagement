@@ -87,6 +87,8 @@ public class UsersController : Controller
                 IsActive = model.IsActive,
                 Roles = model.Roles
             }, ct);
+            if (model.ProfilePicture is { Length: > 0 })
+                created = await _userApi.UploadProfilePictureAsync(created.Id, model.ProfilePicture, ct);
 
             return Json(new { success = true, user = created });
         }
@@ -136,6 +138,8 @@ public class UsersController : Controller
                 PhoneNumber = model.PhoneNumber,
                 IsActive = model.IsActive
             }, ct);
+            if (model.ProfilePicture is { Length: > 0 })
+                updated = await _userApi.UploadProfilePictureAsync(id, model.ProfilePicture, ct);
 
             return Json(new { success = true, user = updated });
         }

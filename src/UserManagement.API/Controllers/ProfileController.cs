@@ -30,6 +30,18 @@ public class ProfileController : ControllerBase
         return Ok(ApiResponse<UserDto>.Ok(profile, "Profile updated."));
     }
 
+    [HttpPost("profile-picture")]
+    public async Task<ActionResult<ApiResponse<UserDto>>> UploadProfilePicture([FromForm] IFormFile profilePicture, CancellationToken ct)
+    {
+        if (profilePicture.Length == 0)
+            return BadRequest(ApiResponse.Fail("A profile picture is required.", traceId: HttpContext.TraceIdentifier));
+
+        await using var image = profilePicture.OpenReadStream();
+        var profile = await _userService.UpdateProfilePictureAsync(
+            GetUserId(), image, profilePicture.FileName, HttpContext.ToAuditContext(), ct);
+        return Ok(ApiResponse<UserDto>.Ok(profile, "Profile picture updated."));
+    }
+
     [HttpPost("change-password")]
     public async Task<ActionResult<ApiResponse>> ChangePassword([FromBody] ChangePasswordDto dto, CancellationToken ct)
     {

@@ -1,6 +1,11 @@
 @model UserManagement.UI.ViewModels.Profile.ProfileViewModel
+@inject Microsoft.Extensions.Options.IOptions<UserManagement.UI.Configuration.ApiSettings> ApiSettingsOptions
 @{
     ViewData["Title"] = "My Profile";
+    var profilePictureUrl = string.IsNullOrWhiteSpace(Model.ProfilePicturePath)
+        ? Url.Content("~/images/default-avatar.svg")
+        : $"{ApiSettingsOptions.Value.BaseUrl.TrimEnd('/')}{Model.ProfilePicturePath}";
+    var defaultProfilePictureUrl = Url.Content("~/images/default-avatar.svg");
 }
 
 <h2 class="mb-4">My Profile</h2>
@@ -8,7 +13,7 @@
 <div class="row">
     <div class="col-md-7">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-        <form asp-controller="Profile" asp-action="Index" method="post">
+        <form asp-controller="Profile" asp-action="Index" method="post" enctype="multipart/form-data">
             <input asp-for="Id" type="hidden" />
             <div class="mb-3">
                 <label class="form-label">Username</label>
@@ -34,11 +39,22 @@
                 <input asp-for="PhoneNumber" class="form-control" />
                 <span asp-validation-for="PhoneNumber" class="text-danger"></span>
             </div>
+            <div class="mb-3">
+                <label asp-for="ProfilePicture" class="form-label">Profile picture</label>
+                <input asp-for="ProfilePicture" class="form-control" accept="image/jpeg,image/png,image/webp" />
+                <div class="form-text">Optional JPEG, PNG, or WebP image; maximum 2 MB.</div>
+            </div>
             <button type="submit" class="btn btn-primary">Save changes</button>
             <a asp-controller="Profile" asp-action="ChangePassword" class="btn btn-outline-secondary">Change password</a>
         </form>
     </div>
     <div class="col-md-5">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <img src="@profilePictureUrl" class="rounded-circle" width="128" height="128" alt="Profile picture"
+                     onerror="this.onerror=null;this.src='@defaultProfilePictureUrl';" />
+            </div>
+        </div>
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Account details</h5>

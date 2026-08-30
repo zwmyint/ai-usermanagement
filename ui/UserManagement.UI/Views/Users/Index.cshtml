@@ -140,7 +140,10 @@
 
             $(document).on('submit', '#createUserForm', function (e) {
                 e.preventDefault();
-                $.post('@Url.Action("Create", "Users")', $(this).serialize())
+                $.ajax({
+                    url: '@Url.Action("Create", "Users")', method: 'POST', data: new FormData(this),
+                    processData: false, contentType: false
+                })
                     .done(() => { $('#userModal').modal('hide'); reloadTable(); })
                     .fail(xhr => showFormErrors('#createUserForm', xhr));
             });
@@ -150,7 +153,10 @@
                 const id = $(this).data('id');
                 const roles = $(this).find('select[name="roles"]').val() || [];
 
-                $.post(`/Admin/Users/${id}/Edit`, $(this).serialize())
+                $.ajax({
+                    url: `/Admin/Users/${id}/Edit`, method: 'POST', data: new FormData(this),
+                    processData: false, contentType: false
+                })
                     .then(() => $.post({ url: `/Admin/Users/${id}/Roles`, traditional: true, data: { roles: roles, __RequestVerificationToken: getAntiForgeryToken() } }))
                     .then(() => { $('#userModal').modal('hide'); reloadTable(); })
                     .catch(xhr => showFormErrors('#editUserForm', xhr));

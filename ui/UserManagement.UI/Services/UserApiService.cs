@@ -10,6 +10,7 @@ public interface IUserApiService
     Task<UserDto> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<UserDto> CreateAsync(CreateUserRequest request, CancellationToken ct = default);
     Task<UserDto> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken ct = default);
+    Task<UserDto> UploadProfilePictureAsync(Guid id, IFormFile picture, CancellationToken ct = default);
     Task DeleteAsync(Guid id, CancellationToken ct = default);
     Task<UserDto> SetActiveAsync(Guid id, bool isActive, CancellationToken ct = default);
     Task<UserDto> AssignRolesAsync(Guid id, List<string> roles, CancellationToken ct = default);
@@ -42,6 +43,9 @@ public class UserApiService : ApiClientBase, IUserApiService
 
     public Task<UserDto> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken ct = default) =>
         SendAsync<UserDto>(HttpMethod.Put, $"api/users/{id}", request, ct);
+
+    public Task<UserDto> UploadProfilePictureAsync(Guid id, IFormFile picture, CancellationToken ct = default) =>
+        SendMultipartAsync<UserDto>(HttpMethod.Post, $"api/users/{id}/profile-picture", picture, ct);
 
     public Task DeleteAsync(Guid id, CancellationToken ct = default) =>
         SendAsync(HttpMethod.Delete, $"api/users/{id}", null, ct);

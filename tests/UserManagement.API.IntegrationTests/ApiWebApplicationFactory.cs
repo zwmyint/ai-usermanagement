@@ -33,7 +33,8 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 ["Smtp:PickupDirectoryOnly"] = "true",
                 ["Seed:Enabled"] = "true",
                 ["Seed:AdminEmail"] = "admin@example.com",
-                ["Seed:AdminPassword"] = "ChangeMe123!"
+                ["Seed:AdminPassword"] = "ChangeMe123!",
+                ["ProfilePicture:StoragePath"] = Path.Combine(Path.GetDirectoryName(_dbPath)!, "profile-pictures")
             });
         });
 
@@ -58,5 +59,8 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
             try { if (File.Exists(file)) File.Delete(file); }
             catch (IOException) { /* best effort cleanup */ }
         }
+        var pictureDirectory = Path.Combine(Path.GetDirectoryName(_dbPath)!, "profile-pictures");
+        if (Directory.Exists(pictureDirectory))
+            Directory.Delete(pictureDirectory, recursive: true);
     }
 }

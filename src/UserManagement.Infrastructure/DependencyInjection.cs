@@ -10,6 +10,7 @@ using UserManagement.Infrastructure.Persistence.Repositories;
 using UserManagement.Infrastructure.Persistence.Seed;
 using UserManagement.Infrastructure.Security;
 using UserManagement.Infrastructure.Services;
+using UserManagement.Infrastructure.Storage;
 
 namespace UserManagement.Infrastructure;
 
@@ -22,6 +23,7 @@ public static class DependencyInjection
         services.Configure<SecuritySettings>(configuration.GetSection(SecuritySettings.SectionName));
         services.Configure<SeedSettings>(configuration.GetSection(SeedSettings.SectionName));
         services.Configure<CorsSettings>(configuration.GetSection(CorsSettings.SectionName));
+        services.Configure<ProfilePictureSettings>(configuration.GetSection(ProfilePictureSettings.SectionName));
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? "Data Source=usermanagement.db";
@@ -40,6 +42,7 @@ public static class DependencyInjection
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<IProfilePictureStorage, ProfilePictureStorage>();
         services.AddScoped<DbSeeder>();
 
         return services;

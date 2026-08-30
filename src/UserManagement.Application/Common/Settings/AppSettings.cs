@@ -55,3 +55,13 @@ public class CorsSettings
 
     public string[] AllowedOrigins { get; set; } = Array.Empty<string>();
 }
+
+public class ProfilePictureSettings
+{
+    public const string SectionName = "ProfilePicture";
+
+    public string StoragePath { get; set; } = "App_Data/profile-pictures";
+    public long MaxFileSizeBytes { get; set; } = 2 * 1024 * 1024;
+    public int MaxWidth { get; set; } = 512;
+    public int MaxHeight { get; set; } = 512;
+}

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace UserManagement.UI.ViewModels.Admin;
 
@@ -17,6 +18,7 @@ public class UserCreateViewModel
     [StringLength(100)] public string? FirstName { get; set; }
     [StringLength(100)] public string? LastName { get; set; }
     [Phone] public string? PhoneNumber { get; set; }
+    public IFormFile? ProfilePicture { get; set; }
 
     public bool IsActive { get; set; } = true;
     public List<string> Roles { get; set; } = new();
@@ -32,6 +34,7 @@ public class UserEditViewModel
     [StringLength(100)] public string? FirstName { get; set; }
     [StringLength(100)] public string? LastName { get; set; }
     [Phone] public string? PhoneNumber { get; set; }
+    public IFormFile? ProfilePicture { get; set; }
 
     public bool IsActive { get; set; } = true;
 }

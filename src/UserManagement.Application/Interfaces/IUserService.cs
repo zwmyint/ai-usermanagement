@@ -8,6 +8,7 @@ public interface IUserService
     Task<UserDto> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<UserDto> CreateAsync(CreateUserDto dto, AuditContext audit, CancellationToken ct = default);
     Task<UserDto> UpdateAsync(Guid id, UpdateUserDto dto, AuditContext audit, CancellationToken ct = default);
+    Task<UserDto> UpdateProfilePictureAsync(Guid id, Stream image, string fileName, AuditContext audit, CancellationToken ct = default);
     Task DeleteAsync(Guid id, AuditContext audit, CancellationToken ct = default);
     Task<UserDto> SetActiveAsync(Guid id, bool isActive, AuditContext audit, CancellationToken ct = default);
     Task<UserDto> AssignRolesAsync(Guid id, AssignRolesDto dto, AuditContext audit, CancellationToken ct = default);

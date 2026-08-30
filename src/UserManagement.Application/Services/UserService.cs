@@ -21,9 +21,11 @@ public class UserService : IUserService
     private readonly IUnitOfWork _uow;
     private readonly IDateTimeProvider _clock;
     private readonly ICurrentUser _currentUser;
+    private readonly IProfilePictureStorage _profilePictures;
 
     public UserService(IUserRepository users, IRoleRepository roles, IRefreshTokenRepository refreshTokens,
-        IPasswordHasher hasher, IAuditService audit, IUnitOfWork uow, IDateTimeProvider clock, ICurrentUser currentUser)
+        IPasswordHasher hasher, IAuditService audit, IUnitOfWork uow, IDateTimeProvider clock, ICurrentUser currentUser,
+        IProfilePictureStorage profilePictures)
     {
         _users = users;
         _roles = roles;
@@ -33,6 +35,7 @@ public class UserService : IUserService
         _uow = uow;
         _clock = clock;
         _currentUser = currentUser;
+        _profilePictures = profilePictures;
     }
 
     public async Task<PagedResult<UserDto>> GetUsersAsync(UserQueryRequest request, CancellationToken ct = default)
@@ -139,6 +142,36 @@ public class UserService : IUserService
         return user.ToDto(now);
     }
 
+    public async Task<UserDto> UpdateProfilePictureAsync(
+        Guid id, Stream image, string fileName, AuditContext audit, CancellationToken ct = default)
+    {
+        var user = await _users.GetByIdWithRolesAsync(id, ct) ?? throw NotFoundException.For(nameof(User), id);
+        var before = Serialize(user);
+        var previousPath = user.ProfilePicturePath;
+        var newPath = await _profilePictures.SaveAsync(image, fileName, ct);
+        var now = _clock.UtcNow;
+
+        try
+        {
+            user.ProfilePicturePath = newPath;
+            user.UpdatedAt = now;
+            user.UpdatedBy = _currentUser.UserName;
+            _users.Update(user);
+            await _uow.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            await _profilePictures.DeleteAsync(newPath, ct);
+            throw;
+        }
+
+        await _profilePictures.DeleteAsync(previousPath, ct);
+        await _audit.LogAsync(AuditAction.ProfileUpdated, audit, _currentUser.UserId, _currentUser.UserName,
+            nameof(User), user.Id.ToString(), before, Serialize(user), ct: ct);
+
+        return user.ToDto(now);
+    }
+
     public async Task DeleteAsync(Guid id, AuditContext audit, CancellationToken ct = default)
     {
         var user = await _users.GetByIdWithRolesAsync(id, ct) ?? throw NotFoundException.For(nameof(User), id);
@@ -172,6 +205,7 @@ public class UserService : IUserService
 
         await _audit.LogAsync(AuditAction.UserDeleted, audit, _currentUser.UserId, _currentUser.UserName,
             nameof(User), user.Id.ToString(), ct: ct);
+        await _profilePictures.DeleteAsync(user.ProfilePicturePath, ct);
     }
 
     public async Task<UserDto> SetActiveAsync(Guid id, bool isActive, AuditContext audit, CancellationToken ct = default)
@@ -377,6 +411,7 @@ public class UserService : IUserService
         user.FirstName,
         user.LastName,
         user.PhoneNumber,
+        user.ProfilePicturePath,
         user.IsActive
     });
 }

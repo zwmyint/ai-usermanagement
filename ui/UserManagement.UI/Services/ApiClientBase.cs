@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using UserManagement.UI.Contracts;
 
@@ -49,6 +50,30 @@ public abstract class ApiClientBase
                 (int)response.StatusCode,
                 envelope?.Errors);
         }
+    }
+
+    protected async Task<T> SendMultipartAsync<T>(HttpMethod method, string url, IFormFile file, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(method, url);
+        using var form = new MultipartFormDataContent();
+        await using var stream = file.OpenReadStream();
+        using var content = new StreamContent(stream);
+        if (!string.IsNullOrWhiteSpace(file.ContentType))
+            content.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+        form.Add(content, "profilePicture", file.FileName);
+        request.Content = form;
+
+        using var response = await Http.SendAsync(request, ct);
+        var envelope = await ReadEnvelopeAsync<T>(response, ct);
+        if (!response.IsSuccessStatusCode || envelope is null || !envelope.Success)
+        {
+            throw new ApiException(
+                envelope?.Message ?? $"Request failed with status {(int)response.StatusCode}.",
+                (int)response.StatusCode,
+                envelope?.Errors);
+        }
+
+        return envelope.Data!;
     }
 
     private static async Task<ApiResponse<T>?> ReadEnvelopeAsync<T>(HttpResponseMessage response, CancellationToken ct)

@@ -20,6 +20,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.FirstName).HasMaxLength(100);
         builder.Property(x => x.LastName).HasMaxLength(100);
         builder.Property(x => x.PhoneNumber).HasMaxLength(32);
+        builder.Property(x => x.ProfilePicturePath).HasMaxLength(256);
         builder.Property(x => x.CreatedBy).HasMaxLength(64);
         builder.Property(x => x.UpdatedBy).HasMaxLength(64);
 

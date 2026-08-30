@@ -160,6 +160,8 @@ public class AccountController : Controller
             new(ClaimTypes.Email, auth.User.Email),
             new("full_name", auth.User.FullName)
         };
+        if (!string.IsNullOrWhiteSpace(auth.User.ProfilePicturePath))
+            claims.Add(new Claim("profile_picture", auth.User.ProfilePicturePath));
         claims.AddRange(auth.User.Roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

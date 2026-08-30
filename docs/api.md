@@ -29,6 +29,7 @@ field names to validation messages. Authenticated endpoints require `Authorizati
 | GET | `/` | Get the caller's own profile. |
 | PUT | `/` | Update the caller's own profile (email, name, phone). |
 | POST | `/change-password` | Change the caller's own password. |
+| POST | `/profile-picture` | Upload or replace the caller's profile picture (`multipart/form-data`, `profilePicture` field). |
 
 ## Users — `/api/users` (Bearer; see [Roles & Permissions](#roles--permissions))
 
@@ -38,6 +39,7 @@ field names to validation messages. Authenticated endpoints require `Authorizati
 | GET | `/{id}` | `UsersRead` | Get a single user. |
 | POST | `/` | `UsersWrite` | Create a user. |
 | PUT | `/{id}` | `UsersWrite` | Update a user's profile fields. |
+| POST | `/{id}/profile-picture` | `UsersWrite` | Upload or replace a user's profile picture (`multipart/form-data`, `profilePicture` field). |
 | DELETE | `/{id}` | `UsersDelete` | Soft-delete a user (blocked for the last active Admin or self). |
 | PATCH | `/{id}/active` | `UsersWrite` | Activate/deactivate a user. |
 | PUT | `/{id}/roles` | `UsersWrite` | Replace a user's role assignments. |
@@ -95,6 +97,11 @@ isn't permitted to use (defense in depth — the server-side policy is the actua
 The Create/Edit User modals (`Views/Users/_CreateModal.cshtml` / `_EditModal.cshtml`) assign
 roles via a multi-select `<select multiple>` dropdown (populated from `GET /api/roles`), not
 checkboxes — a user can still be assigned more than one role at a time.
+
+Profile-picture uploads accept JPEG, PNG, and WebP files up to 2 MB. The API validates decoded
+image content, resizes it to at most 512 × 512 pixels, and stores a generated JPEG filename. The
+returned user payload includes `profilePicturePath`; clients use their default avatar when it is
+`null`.
 
 ## Dashboard — `/api/dashboard` (Bearer)
 

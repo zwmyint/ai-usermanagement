@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace UserManagement.UI.ViewModels.Profile;
 
@@ -13,6 +14,8 @@ public class ProfileViewModel
     [StringLength(100)] public string? FirstName { get; set; }
     [StringLength(100)] public string? LastName { get; set; }
     [Phone] public string? PhoneNumber { get; set; }
+    public string? ProfilePicturePath { get; set; }
+    public IFormFile? ProfilePicture { get; set; }
 
     public bool EmailConfirmed { get; set; }
     public DateTime? LastLoginAt { get; set; }

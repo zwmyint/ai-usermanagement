@@ -14,6 +14,7 @@ public static class MappingExtensions
         LastName = user.LastName,
         FullName = user.FullName,
         PhoneNumber = user.PhoneNumber,
+        ProfilePicturePath = user.ProfilePicturePath,
         IsActive = user.IsActive,
         EmailConfirmed = user.EmailConfirmed,
         IsLockedOut = user.IsLockedOut(utcNow),

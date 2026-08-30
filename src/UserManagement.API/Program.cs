@@ -1,10 +1,13 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
@@ -40,6 +43,11 @@ builder.Services.AddDataProtection()
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+var configuredProfilePictureSettings = builder.Configuration
+    .GetSection(ProfilePictureSettings.SectionName)
+    .Get<ProfilePictureSettings>() ?? new ProfilePictureSettings();
+builder.Services.Configure<FormOptions>(options =>
+    options.MultipartBodyLengthLimit = configuredProfilePictureSettings.MaxFileSizeBytes);
 
 builder.Services.AddAuthentication(options =>
     {
@@ -177,6 +185,17 @@ else
 }
 
 app.UseHttpsRedirection();
+
+var profilePictureSettings = app.Services.GetRequiredService<IOptions<ProfilePictureSettings>>().Value;
+var profilePictureStoragePath = Path.GetFullPath(Path.IsPathRooted(profilePictureSettings.StoragePath)
+    ? profilePictureSettings.StoragePath
+    : Path.Combine(app.Environment.ContentRootPath, profilePictureSettings.StoragePath));
+Directory.CreateDirectory(profilePictureStoragePath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(profilePictureStoragePath),
+    RequestPath = "/uploads/profile-pictures"
+});
 
 app.UseCors("Default");
 

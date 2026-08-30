@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using UserManagement.UI.Contracts;
 using UserManagement.UI.Services;
 using UserManagement.UI.ViewModels.Profile;
@@ -34,6 +37,11 @@ public class ProfileController : Controller
                 LastName = model.LastName,
                 PhoneNumber = model.PhoneNumber
             }, ct);
+            if (model.ProfilePicture is { Length: > 0 })
+            {
+                updated = await _profileApi.UploadProfilePictureAsync(model.ProfilePicture, ct);
+                await RenewProfilePictureClaimAsync(updated.ProfilePicturePath);
+            }
 
             TempData["SuccessMessage"] = "Profile updated.";
             return View(ToViewModel(updated));
@@ -81,6 +89,7 @@ public class ProfileController : Controller
         FirstName = user.FirstName,
         LastName = user.LastName,
         PhoneNumber = user.PhoneNumber,
+        ProfilePicturePath = user.ProfilePicturePath,
         EmailConfirmed = user.EmailConfirmed,
         LastLoginAt = user.LastLoginAt,
         CreatedAt = user.CreatedAt,
@@ -99,5 +108,19 @@ public class ProfileController : Controller
         {
             ModelState.AddModelError(string.Empty, ex.Message);
         }
+    }
+
+    private async Task RenewProfilePictureClaimAsync(string? profilePicturePath)
+    {
+        var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (!result.Succeeded || result.Properties is null) return;
+
+        var claims = User.Claims.Where(claim => claim.Type != "profile_picture").ToList();
+        if (!string.IsNullOrWhiteSpace(profilePicturePath))
+            claims.Add(new Claim("profile_picture", profilePicturePath));
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), result.Properties);
     }
 }

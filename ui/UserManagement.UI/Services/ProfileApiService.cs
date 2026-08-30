@@ -6,6 +6,7 @@ public interface IProfileApiService
 {
     Task<UserDto> GetProfileAsync(CancellationToken ct = default);
     Task<UserDto> UpdateProfileAsync(UpdateProfileRequest request, CancellationToken ct = default);
+    Task<UserDto> UploadProfilePictureAsync(IFormFile picture, CancellationToken ct = default);
     Task ChangePasswordAsync(ChangePasswordRequest request, CancellationToken ct = default);
 }
 
@@ -19,6 +20,9 @@ public class ProfileApiService : ApiClientBase, IProfileApiService
 
     public Task<UserDto> UpdateProfileAsync(UpdateProfileRequest request, CancellationToken ct = default) =>
         SendAsync<UserDto>(HttpMethod.Put, "api/profile", request, ct);
+
+    public Task<UserDto> UploadProfilePictureAsync(IFormFile picture, CancellationToken ct = default) =>
+        SendMultipartAsync<UserDto>(HttpMethod.Post, "api/profile/profile-picture", picture, ct);
 
     public Task ChangePasswordAsync(ChangePasswordRequest request, CancellationToken ct = default) =>
         SendAsync(HttpMethod.Post, "api/profile/change-password", request, ct);
