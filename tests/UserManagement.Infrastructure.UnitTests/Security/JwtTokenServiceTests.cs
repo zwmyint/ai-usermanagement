@@ -33,7 +33,7 @@ public class JwtTokenServiceTests
         var sut = CreateSut();
         var user = new User { Id = Guid.NewGuid(), UserName = "jdoe", Email = "jdoe@example.com", FirstName = "John", LastName = "Doe" };
 
-        var token = sut.CreateAccessToken(user, new[] { "Admin", "User" });
+        var token = sut.CreateAccessToken(user, new[] { "Admin", "User" }, new[] { "Users.Read" });
         var principal = sut.ValidateAccessToken(token.Token);
 
         Assert.NotNull(principal);
@@ -41,6 +41,7 @@ public class JwtTokenServiceTests
         Assert.Equal(user.AuthenticationVersion.ToString(), principal.FindFirst(AuthClaimTypes.AuthenticationVersion)?.Value);
         Assert.Contains(principal.FindAll(System.Security.Claims.ClaimTypes.Role), c => c.Value == "Admin");
         Assert.Contains(principal.FindAll(System.Security.Claims.ClaimTypes.Role), c => c.Value == "User");
+        Assert.Contains(principal.FindAll(AuthClaimTypes.Permission), c => c.Value == "Users.Read");
     }
 
     [Fact]
@@ -49,7 +50,7 @@ public class JwtTokenServiceTests
         var sut = CreateSut();
         var user = new User { Id = Guid.NewGuid(), UserName = "jdoe", Email = "jdoe@example.com" };
 
-        var token = sut.CreateAccessToken(user, Array.Empty<string>());
+        var token = sut.CreateAccessToken(user, Array.Empty<string>(), Array.Empty<string>());
         var tampered = token.Token[..^2] + (token.Token[^2] == 'A' ? "B" : "A") + token.Token[^1];
 
         Assert.Null(sut.ValidateAccessToken(tampered));
@@ -62,7 +63,7 @@ public class JwtTokenServiceTests
         var sut2 = CreateSut("22222222222222222222222222222222");
         var user = new User { Id = Guid.NewGuid(), UserName = "jdoe", Email = "jdoe@example.com" };
 
-        var token = sut1.CreateAccessToken(user, Array.Empty<string>());
+        var token = sut1.CreateAccessToken(user, Array.Empty<string>(), Array.Empty<string>());
 
         Assert.Null(sut2.ValidateAccessToken(token.Token));
     }

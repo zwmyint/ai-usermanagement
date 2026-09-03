@@ -21,7 +21,7 @@ public class DashboardController : ControllerBase
     [HttpGet("summary")]
     public async Task<ActionResult<ApiResponse<DashboardSummaryDto>>> GetSummary(CancellationToken ct)
     {
-        var summary = await _dashboardService.GetSummaryAsync(GetUserId(), User.IsInRole(RoleNames.Admin), ct);
+        var summary = await _dashboardService.GetSummaryAsync(GetUserId(), User.HasClaim(AuthClaimTypes.Permission, PermissionNames.DashboardAdminView), ct);
         return Ok(ApiResponse<DashboardSummaryDto>.Ok(summary));
     }
 

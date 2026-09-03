@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Serilog;
 using UserManagement.UI.Configuration;
@@ -76,7 +77,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("UsersRead", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.UsersRead)))
+    .AddPolicy("UsersWrite", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.UsersWrite)))
+    .AddPolicy("UsersDelete", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.UsersDelete)))
+    .AddPolicy("RolesManage", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.RolesManage)))
+    .AddPolicy("AuditRead", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.AuditRead)));
 
 var app = builder.Build();
 

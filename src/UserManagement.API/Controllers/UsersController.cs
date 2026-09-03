@@ -50,7 +50,7 @@ public class UsersController : ControllerBase
     [HttpPost("{id:guid}/profile-picture")]
     [Authorize(Policy = "UsersWrite")]
     public async Task<ActionResult<ApiResponse<UserDto>>> UploadProfilePicture(
-        Guid id, [FromForm] IFormFile profilePicture, CancellationToken ct)
+        Guid id, IFormFile profilePicture, CancellationToken ct)
     {
         if (profilePicture.Length == 0)
             return BadRequest(ApiResponse.Fail("A profile picture is required.", traceId: HttpContext.TraceIdentifier));

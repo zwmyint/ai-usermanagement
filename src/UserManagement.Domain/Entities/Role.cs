@@ -15,4 +15,5 @@ public class Role : BaseEntity, IAuditableEntity
     public string? UpdatedBy { get; set; }
 
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

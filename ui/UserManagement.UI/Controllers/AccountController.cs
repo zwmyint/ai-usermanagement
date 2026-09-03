@@ -163,6 +163,7 @@ public class AccountController : Controller
         if (!string.IsNullOrWhiteSpace(auth.User.ProfilePicturePath))
             claims.Add(new Claim("profile_picture", auth.User.ProfilePicturePath));
         claims.AddRange(auth.User.Roles.Select(r => new Claim(ClaimTypes.Role, r)));
+        claims.AddRange(auth.User.Permissions.Select(p => new Claim(Security.PermissionClaimTypes.Permission, p)));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);

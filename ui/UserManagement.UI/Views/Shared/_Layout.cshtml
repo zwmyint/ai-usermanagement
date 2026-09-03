@@ -32,19 +32,19 @@
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || User.IsInRole("Manager") || User.IsInRole("Viewer")))
+                        @if (User.Identity?.IsAuthenticated == true && User.HasClaim(UserManagement.UI.Security.PermissionClaimTypes.Permission, UserManagement.UI.Security.PermissionNames.UsersRead))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-light" asp-controller="Users" asp-action="Index">Users</a>
                             </li>
                         }
-                        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                        @if (User.Identity?.IsAuthenticated == true && User.HasClaim(UserManagement.UI.Security.PermissionClaimTypes.Permission, UserManagement.UI.Security.PermissionNames.RolesManage))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-light" asp-controller="Roles" asp-action="Index">Roles</a>
                             </li>
                         }
-                        @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || User.IsInRole("Auditor")))
+                        @if (User.Identity?.IsAuthenticated == true && User.HasClaim(UserManagement.UI.Security.PermissionClaimTypes.Permission, UserManagement.UI.Security.PermissionNames.AuditRead))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-light" asp-controller="AuditLogs" asp-action="Index">Audit Logs</a>

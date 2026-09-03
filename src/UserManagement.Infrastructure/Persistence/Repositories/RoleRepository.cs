@@ -13,6 +13,10 @@ public class RoleRepository : IRoleRepository
     public Task<Role?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         _db.Roles.FirstOrDefaultAsync(x => x.Id == id, ct);
 
+    public Task<Role?> GetByIdWithPermissionsAsync(Guid id, CancellationToken ct = default) =>
+        _db.Roles.Include(x => x.RolePermissions).ThenInclude(x => x.Permission)
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
+
     public Task<Role?> GetByNameAsync(string normalizedName, CancellationToken ct = default) =>
         _db.Roles.FirstOrDefaultAsync(x => x.NormalizedName == normalizedName, ct);
 
@@ -44,4 +48,28 @@ public class RoleRepository : IRoleRepository
     public void Update(Role role) => _db.Roles.Update(role);
 
     public void Remove(Role role) => _db.Roles.Remove(role);
+
+    public Task<int> CountRolesWithPermissionAsync(string permissionNormalizedName, Guid? excludeRoleId = null, CancellationToken ct = default) =>
+        _db.Roles.CountAsync(r =>
+            (excludeRoleId == null || r.Id != excludeRoleId) &&
+            r.RolePermissions.Any(rp => rp.Permission.NormalizedName == permissionNormalizedName), ct);
+}
+
+public class PermissionRepository : IPermissionRepository
+{
+    private readonly AppDbContext _db;
+
+    public PermissionRepository(AppDbContext db) => _db = db;
+
+    public async Task<IReadOnlyList<Permission>> GetAllAsync(CancellationToken ct = default) =>
+        await _db.Permissions.OrderBy(x => x.Name).ToListAsync(ct);
+
+    public Task<Permission?> GetByNameAsync(string normalizedName, CancellationToken ct = default) =>
+        _db.Permissions.FirstOrDefaultAsync(x => x.NormalizedName == normalizedName, ct);
+
+    public async Task<IReadOnlyList<Permission>> GetByNamesAsync(IEnumerable<string> normalizedNames, CancellationToken ct = default)
+    {
+        var names = normalizedNames.ToList();
+        return await _db.Permissions.Where(x => names.Contains(x.NormalizedName)).ToListAsync(ct);
+    }
 }

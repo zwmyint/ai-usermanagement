@@ -14,7 +14,7 @@ public class UserRepository : IUserRepository
         _db.Users.FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public Task<User?> GetByIdWithRolesAsync(Guid id, CancellationToken ct = default) =>
-        _db.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role)
+        _db.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role).ThenInclude(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public Task<User?> GetByEmailAsync(string normalizedEmail, CancellationToken ct = default) =>
@@ -22,7 +22,7 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(x => x.NormalizedEmail == normalizedEmail, ct);
 
     public Task<User?> GetByUserNameOrEmailAsync(string normalizedValue, CancellationToken ct = default) =>
-        _db.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role)
+        _db.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role).ThenInclude(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(x => x.NormalizedEmail == normalizedValue || x.NormalizedUserName == normalizedValue, ct);
 
     public Task<bool> EmailExistsAsync(string normalizedEmail, Guid? excludeUserId = null, CancellationToken ct = default) =>

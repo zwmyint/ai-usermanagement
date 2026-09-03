@@ -54,3 +54,11 @@ public class AssignRolesViewModel
     public Guid UserId { get; set; }
     public List<string> Roles { get; set; } = new();
 }
+
+public class RolePermissionsViewModel
+{
+    public Guid RoleId { get; set; }
+    public string RoleName { get; set; } = string.Empty;
+    public IReadOnlyList<UserManagement.UI.Contracts.PermissionDto> AllPermissions { get; set; } = Array.Empty<UserManagement.UI.Contracts.PermissionDto>();
+    public List<string> AssignedPermissions { get; set; } = new();
+}

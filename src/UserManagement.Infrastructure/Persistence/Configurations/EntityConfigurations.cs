@@ -73,6 +73,42 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
     }
 }
 
+public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
+{
+    public void Configure(EntityTypeBuilder<Permission> builder)
+    {
+        builder.ToTable("Permissions");
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Name).IsRequired().HasMaxLength(64);
+        builder.Property(x => x.NormalizedName).IsRequired().HasMaxLength(64);
+        builder.Property(x => x.Description).HasMaxLength(256);
+
+        builder.HasIndex(x => x.NormalizedName).IsUnique();
+    }
+}
+
+public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermission>
+{
+    public void Configure(EntityTypeBuilder<RolePermission> builder)
+    {
+        builder.ToTable("RolePermissions");
+        builder.HasKey(x => new { x.RoleId, x.PermissionId });
+
+        builder.Property(x => x.AssignedBy).HasMaxLength(64);
+
+        builder.HasOne(x => x.Role)
+            .WithMany(x => x.RolePermissions)
+            .HasForeignKey(x => x.RoleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(x => x.Permission)
+            .WithMany(x => x.RolePermissions)
+            .HasForeignKey(x => x.PermissionId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 {
     public void Configure(EntityTypeBuilder<RefreshToken> builder)

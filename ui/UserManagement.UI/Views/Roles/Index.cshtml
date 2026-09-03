@@ -29,6 +29,7 @@
                 <td>@(role.IsSystemRole ? "Yes" : "No")</td>
                 <td>@role.UserCount</td>
                 <td class="text-end">
+                    <button class="btn btn-sm btn-outline-secondary btn-role-permissions" data-id="@role.Id">Permissions</button>
                     <button class="btn btn-sm btn-outline-primary btn-edit-role" data-id="@role.Id">Edit</button>
                     @if (!role.IsSystemRole)
                     {
@@ -64,6 +65,11 @@
             $.get(`/Admin/Roles/${id}/Edit`, showRoleModal);
         });
 
+        $(document).on('click', '.btn-role-permissions', function () {
+            const id = $(this).data('id');
+            $.get(`/Admin/Roles/${id}/Permissions`, showRoleModal);
+        });
+
         $(document).on('click', '.btn-delete-role', function () {
             const id = $(this).data('id');
             if (!confirm('Delete this role?')) return;
@@ -79,6 +85,14 @@
             $.post(url, $(this).serialize())
                 .done(() => { $('#roleModal').modal('hide'); location.reload(); })
                 .fail(xhr => $('#roleForm').prepend(`<div class="alert alert-danger">${xhr.responseJSON?.message || 'Save failed.'}</div>`));
+        });
+
+        $(document).on('submit', '#rolePermissionsForm', function (e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            $.post(`/Admin/Roles/${id}/Permissions`, $(this).serialize())
+                .done(() => { $('#roleModal').modal('hide'); location.reload(); })
+                .fail(xhr => $('#rolePermissionsForm').prepend(`<div class="alert alert-danger">${xhr.responseJSON?.message || 'Save failed.'}</div>`));
         });
     </script>
 }

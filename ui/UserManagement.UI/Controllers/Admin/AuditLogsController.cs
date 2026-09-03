@@ -4,7 +4,7 @@ using UserManagement.UI.Services;
 
 namespace UserManagement.UI.Controllers.Admin;
 
-[Authorize(Roles = "Admin,Auditor")]
+[Authorize(Policy = "AuditRead")]
 [Route("Admin/AuditLogs")]
 public class AuditLogsController : Controller
 {

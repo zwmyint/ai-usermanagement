@@ -337,7 +337,11 @@ public class AuthService : IAuthService
         CancellationToken ct, TokenPair? refreshToken = null)
     {
         var roles = user.UserRoles.Where(ur => ur.Role is not null).Select(ur => ur.Role.Name).ToList();
-        var access = _tokens.CreateAccessToken(user, roles);
+        var permissions = user.UserRoles.Where(ur => ur.Role is not null)
+            .SelectMany(ur => ur.Role.RolePermissions.Where(rp => rp.Permission is not null).Select(rp => rp.Permission.Name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var access = _tokens.CreateAccessToken(user, roles, permissions);
         refreshToken ??= _tokens.CreateRefreshToken();
 
         await _refreshTokens.AddAsync(new RefreshToken

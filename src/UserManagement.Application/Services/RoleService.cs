@@ -13,15 +13,17 @@ namespace UserManagement.Application.Services;
 public class RoleService : IRoleService
 {
     private readonly IRoleRepository _roles;
+    private readonly IPermissionRepository _permissions;
     private readonly IAuditService _audit;
     private readonly IUnitOfWork _uow;
     private readonly IDateTimeProvider _clock;
     private readonly ICurrentUser _currentUser;
 
-    public RoleService(IRoleRepository roles, IAuditService audit, IUnitOfWork uow,
+    public RoleService(IRoleRepository roles, IPermissionRepository permissions, IAuditService audit, IUnitOfWork uow,
         IDateTimeProvider clock, ICurrentUser currentUser)
     {
         _roles = roles;
+        _permissions = permissions;
         _audit = audit;
         _uow = uow;
         _clock = clock;
@@ -111,5 +113,58 @@ public class RoleService : IRoleService
 
         await _audit.LogAsync(AuditAction.RoleDeleted, audit, _currentUser.UserId, _currentUser.UserName,
             nameof(Role), role.Id.ToString(), role.Name, ct: ct);
+    }
+
+    public async Task<IReadOnlyList<PermissionDto>> GetAllPermissionsAsync(CancellationToken ct = default)
+    {
+        var permissions = await _permissions.GetAllAsync(ct);
+        return permissions.Select(p => p.ToDto()).ToList();
+    }
+
+    public async Task<RoleDto> UpdatePermissionsAsync(Guid id, UpdateRolePermissionsDto dto, AuditContext audit, CancellationToken ct = default)
+    {
+        var role = await _roles.GetByIdWithPermissionsAsync(id, ct) ?? throw NotFoundException.For(nameof(Role), id);
+
+        var requestedNames = dto.Permissions.Select(Normalizer.Normalize).Distinct().ToList();
+        var permissions = await _permissions.GetByNamesAsync(requestedNames, ct);
+        if (permissions.Count != requestedNames.Count)
+            throw new ValidationException(nameof(dto.Permissions), "One or more permission names are unknown.");
+
+        // Safety net: never allow a change that would leave no role able to manage roles/permissions -
+        // that would permanently lock every administrator out of undoing the mistake.
+        var keepsRolesManage = permissions.Any(p => p.NormalizedName == Normalizer.Normalize(PermissionNames.RolesManage));
+        var currentlyHasRolesManage = role.RolePermissions.Any(rp =>
+            rp.Permission.NormalizedName == Normalizer.Normalize(PermissionNames.RolesManage));
+        if (currentlyHasRolesManage && !keepsRolesManage)
+        {
+            var otherRolesWithIt = await _roles.CountRolesWithPermissionAsync(
+                Normalizer.Normalize(PermissionNames.RolesManage), role.Id, ct);
+            if (otherRolesWithIt == 0)
+                throw new ConflictException(
+                    $"Cannot remove '{PermissionNames.RolesManage}' from this role - no other role would be able to manage roles/permissions afterwards.");
+        }
+
+        var now = _clock.UtcNow;
+        role.RolePermissions.Clear();
+        foreach (var permission in permissions)
+        {
+            role.RolePermissions.Add(new RolePermission
+            {
+                RoleId = role.Id,
+                PermissionId = permission.Id,
+                AssignedAt = now,
+                AssignedBy = _currentUser.UserName
+            });
+        }
+        role.UpdatedAt = now;
+        role.UpdatedBy = _currentUser.UserName;
+
+        _roles.Update(role);
+        await _uow.SaveChangesAsync(ct);
+
+        await _audit.LogAsync(AuditAction.RolePermissionsUpdated, audit, _currentUser.UserId, _currentUser.UserName,
+            nameof(Role), role.Id.ToString(), newValues: string.Join(", ", permissions.Select(p => p.Name)), ct: ct);
+
+        return role.ToDto(await _roles.CountUsersInRoleAsync(role.Id, ct));
     }
 }

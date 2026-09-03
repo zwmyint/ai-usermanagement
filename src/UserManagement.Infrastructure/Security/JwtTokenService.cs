@@ -28,7 +28,7 @@ public class JwtTokenService : ITokenService
         _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Key));
     }
 
-    public AccessToken CreateAccessToken(User user, IEnumerable<string> roles)
+    public AccessToken CreateAccessToken(User user, IEnumerable<string> roles, IEnumerable<string> permissions)
     {
         var now = _clock.UtcNow;
         var expires = now.AddMinutes(_settings.AccessTokenMinutes);
@@ -46,6 +46,7 @@ public class JwtTokenService : ITokenService
         };
 
         claims.AddRange(roles.Distinct(StringComparer.OrdinalIgnoreCase).Select(r => new Claim(ClaimTypes.Role, r)));
+        claims.AddRange(permissions.Distinct(StringComparer.OrdinalIgnoreCase).Select(p => new Claim(AuthClaimTypes.Permission, p)));
 
         var token = new JwtSecurityToken(
             issuer: _settings.Issuer,

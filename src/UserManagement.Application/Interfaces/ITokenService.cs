@@ -10,7 +10,7 @@ public record TokenPair(string RawToken, string TokenHash, DateTime ExpiresAt);
 
 public interface ITokenService
 {
-    AccessToken CreateAccessToken(User user, IEnumerable<string> roles);
+    AccessToken CreateAccessToken(User user, IEnumerable<string> roles, IEnumerable<string> permissions);
     TokenPair CreateRefreshToken();
     TokenPair CreatePasswordResetToken();
     string HashToken(string rawToken);

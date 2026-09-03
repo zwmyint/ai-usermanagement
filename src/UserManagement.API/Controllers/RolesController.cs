@@ -54,4 +54,20 @@ public class RolesController : ControllerBase
         await _roleService.DeleteAsync(id, HttpContext.ToAuditContext(), ct);
         return Ok(ApiResponse.Ok("Role deleted."));
     }
+
+    [HttpGet("permissions")]
+    [Authorize(Policy = "RolesManage")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<PermissionDto>>>> GetAllPermissions(CancellationToken ct)
+    {
+        var permissions = await _roleService.GetAllPermissionsAsync(ct);
+        return Ok(ApiResponse<IReadOnlyList<PermissionDto>>.Ok(permissions));
+    }
+
+    [HttpPut("{id:guid}/permissions")]
+    [Authorize(Policy = "RolesManage")]
+    public async Task<ActionResult<ApiResponse<RoleDto>>> UpdatePermissions(Guid id, [FromBody] UpdateRolePermissionsDto dto, CancellationToken ct)
+    {
+        var role = await _roleService.UpdatePermissionsAsync(id, dto, HttpContext.ToAuditContext(), ct);
+        return Ok(ApiResponse<RoleDto>.Ok(role, "Role permissions updated."));
+    }
 }

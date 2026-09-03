@@ -29,6 +29,7 @@ public class UserDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public List<string> Roles { get; set; } = new();
+    public List<string> Permissions { get; set; } = new();
 }
 
 public class RoleDto
@@ -39,6 +40,14 @@ public class RoleDto
     public bool IsSystemRole { get; set; }
     public int UserCount { get; set; }
     public DateTime CreatedAt { get; set; }
+    public List<string> Permissions { get; set; } = new();
+}
+
+public class PermissionDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
 }
 
 public class AuditLogDto
@@ -221,4 +230,9 @@ public class UpdateRoleRequest
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+}
+
+public class UpdateRolePermissionsRequest
+{
+    public List<string> Permissions { get; set; } = new();
 }

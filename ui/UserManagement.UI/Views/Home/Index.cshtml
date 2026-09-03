@@ -19,7 +19,7 @@
     else
     {
         <a asp-controller="Profile" asp-action="Index" class="btn btn-primary btn-lg">Go to my profile</a>
-        @if (User.IsInRole("Admin"))
+        @if (User.HasClaim(UserManagement.UI.Security.PermissionClaimTypes.Permission, UserManagement.UI.Security.PermissionNames.UsersRead))
         {
             <a asp-controller="Users" asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Manage users</a>
         }

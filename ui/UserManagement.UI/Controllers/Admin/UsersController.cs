@@ -6,7 +6,7 @@ using UserManagement.UI.ViewModels.Admin;
 
 namespace UserManagement.UI.Controllers.Admin;
 
-[Authorize(Roles = "Admin,Manager,Viewer")]
+[Authorize(Policy = "UsersRead")]
 [Route("Admin/Users")]
 public class UsersController : Controller
 {
@@ -59,7 +59,7 @@ public class UsersController : Controller
     }
 
     [HttpGet("Create")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Policy = "UsersWrite")]
     public async Task<IActionResult> Create(CancellationToken ct)
     {
         ViewBag.Roles = await _roleApi.GetAllAsync(ct);
@@ -67,7 +67,7 @@ public class UsersController : Controller
     }
 
     [HttpPost("Create")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Policy = "UsersWrite")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(UserCreateViewModel model, CancellationToken ct)
     {
@@ -99,7 +99,7 @@ public class UsersController : Controller
     }
 
     [HttpGet("{id:guid}/Edit")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Policy = "UsersWrite")]
     public async Task<IActionResult> Edit(Guid id, CancellationToken ct)
     {
         var user = await _userApi.GetByIdAsync(id, ct);
@@ -121,7 +121,7 @@ public class UsersController : Controller
     }
 
     [HttpPost("{id:guid}/Edit")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Policy = "UsersWrite")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, UserEditViewModel model, CancellationToken ct)
     {
@@ -150,7 +150,7 @@ public class UsersController : Controller
     }
 
     [HttpPost("{id:guid}/Delete")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "UsersDelete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
@@ -166,7 +166,7 @@ public class UsersController : Controller
     }
 
     [HttpPost("{id:guid}/ToggleActive")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Policy = "UsersWrite")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleActive(Guid id, [FromForm] bool isActive, CancellationToken ct)
     {
@@ -182,7 +182,7 @@ public class UsersController : Controller
     }
 
     [HttpPost("{id:guid}/Roles")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Policy = "UsersWrite")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AssignRoles(Guid id, [FromForm] List<string> roles, CancellationToken ct)
     {

@@ -1,7 +1,7 @@
 @{
     ViewData["Title"] = "Manage Users";
-    var canWrite = User.IsInRole("Admin") || User.IsInRole("Manager");
-    var canDelete = User.IsInRole("Admin");
+    var canWrite = User.HasClaim(UserManagement.UI.Security.PermissionClaimTypes.Permission, UserManagement.UI.Security.PermissionNames.UsersWrite);
+    var canDelete = User.HasClaim(UserManagement.UI.Security.PermissionClaimTypes.Permission, UserManagement.UI.Security.PermissionNames.UsersDelete);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">

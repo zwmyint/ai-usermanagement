@@ -20,5 +20,6 @@ public enum AuditAction
     RoleCreated = 16,
     RoleUpdated = 17,
     RoleDeleted = 18,
-    ProfileUpdated = 19
+    ProfileUpdated = 19,
+    RolePermissionsUpdated = 20
 }

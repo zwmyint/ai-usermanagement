@@ -25,6 +25,12 @@ public static class MappingExtensions
             .Where(ur => ur.Role is not null)
             .Select(ur => ur.Role.Name)
             .OrderBy(n => n)
+            .ToList(),
+        Permissions = user.UserRoles
+            .Where(ur => ur.Role is not null)
+            .SelectMany(ur => ur.Role.RolePermissions.Where(rp => rp.Permission is not null).Select(rp => rp.Permission.Name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(n => n)
             .ToList()
     };
 
@@ -35,7 +41,19 @@ public static class MappingExtensions
         Description = role.Description,
         IsSystemRole = role.IsSystemRole,
         UserCount = userCount,
-        CreatedAt = role.CreatedAt
+        CreatedAt = role.CreatedAt,
+        Permissions = role.RolePermissions
+            .Where(rp => rp.Permission is not null)
+            .Select(rp => rp.Permission.Name)
+            .OrderBy(n => n)
+            .ToList()
+    };
+
+    public static PermissionDto ToDto(this Permission permission) => new()
+    {
+        Id = permission.Id,
+        Name = permission.Name,
+        Description = permission.Description
     };
 
     public static AuditLogDto ToDto(this AuditLog log) => new()

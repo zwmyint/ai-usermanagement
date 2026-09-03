@@ -47,6 +47,12 @@ public class SeedSettings
     public string AdminUserName { get; set; } = "admin";
     public string AdminEmail { get; set; } = "admin@example.com";
     public string AdminPassword { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Shared password for the demo User/Manager accounts seeded by <c>DbSeeder.SeedDemoUsersAsync</c>.
+    /// Left blank (skips seeding them) unless explicitly configured, same convention as <see cref="AdminPassword"/>.
+    /// </summary>
+    public string DemoUserPassword { get; set; } = string.Empty;
 }
 
 public class CorsSettings

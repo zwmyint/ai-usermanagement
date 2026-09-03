@@ -9,6 +9,8 @@ public interface IRoleApiService
     Task<RoleDto> CreateAsync(CreateRoleRequest request, CancellationToken ct = default);
     Task<RoleDto> UpdateAsync(Guid id, UpdateRoleRequest request, CancellationToken ct = default);
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<PermissionDto>> GetAllPermissionsAsync(CancellationToken ct = default);
+    Task<RoleDto> UpdatePermissionsAsync(Guid id, UpdateRolePermissionsRequest request, CancellationToken ct = default);
 }
 
 public class RoleApiService : ApiClientBase, IRoleApiService
@@ -29,4 +31,10 @@ public class RoleApiService : ApiClientBase, IRoleApiService
 
     public Task DeleteAsync(Guid id, CancellationToken ct = default) =>
         SendAsync(HttpMethod.Delete, $"api/roles/{id}", null, ct);
+
+    public Task<IReadOnlyList<PermissionDto>> GetAllPermissionsAsync(CancellationToken ct = default) =>
+        SendAsync<IReadOnlyList<PermissionDto>>(HttpMethod.Get, "api/roles/permissions", null, ct);
+
+    public Task<RoleDto> UpdatePermissionsAsync(Guid id, UpdateRolePermissionsRequest request, CancellationToken ct = default) =>
+        SendAsync<RoleDto>(HttpMethod.Put, $"api/roles/{id}/permissions", request, ct);
 }

@@ -1,6 +1,7 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
+using UserManagement.API.Authorization;
 using UserManagement.API.Common;
 using UserManagement.API.Filters;
 using UserManagement.API.Middleware;
@@ -97,13 +99,20 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
     });
 
 
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
+// Each policy maps to a single fixed permission action. Which *roles* satisfy that permission is
+// resolved at login from the database (Role -> Permission assignments, editable via the Roles admin
+// screen/API) and carried as "permission" claims on the JWT - so granting an existing or brand-new
+// role access to, say, user management never requires touching this file; only adding a genuinely
+// new kind of action does.
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("AdminOnly", policy => policy.RequireRole(RoleNames.Admin))
-    .AddPolicy("UsersRead", policy => policy.RequireRole(RoleNames.Admin, RoleNames.Manager, RoleNames.Viewer))
-    .AddPolicy("UsersWrite", policy => policy.RequireRole(RoleNames.Admin, RoleNames.Manager))
-    .AddPolicy("UsersDelete", policy => policy.RequireRole(RoleNames.Admin))
-    .AddPolicy("RolesManage", policy => policy.RequireRole(RoleNames.Admin))
-    .AddPolicy("AuditRead", policy => policy.RequireRole(RoleNames.Admin, RoleNames.Auditor));
+    .AddPolicy("UsersRead", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.UsersRead)))
+    .AddPolicy("UsersWrite", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.UsersWrite)))
+    .AddPolicy("UsersDelete", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.UsersDelete)))
+    .AddPolicy("RolesManage", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.RolesManage)))
+    .AddPolicy("AuditRead", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.AuditRead)))
+    .AddPolicy("DashboardAdminView", policy => policy.Requirements.Add(new PermissionRequirement(PermissionNames.DashboardAdminView)));
 
 builder.Services.AddRateLimiter(options =>
 {

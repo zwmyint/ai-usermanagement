@@ -10,6 +10,19 @@ public class RoleDto
     public bool IsSystemRole { get; set; }
     public int UserCount { get; set; }
     public DateTime CreatedAt { get; set; }
+    public List<string> Permissions { get; set; } = new();
+}
+
+public class PermissionDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+}
+
+public class UpdateRolePermissionsDto
+{
+    public List<string> Permissions { get; set; } = new();
 }
 
 public class CreateRoleDto

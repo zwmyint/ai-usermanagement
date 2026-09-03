@@ -25,6 +25,9 @@ public interface IRoleService
     Task<RoleDto> CreateAsync(CreateRoleDto dto, AuditContext audit, CancellationToken ct = default);
     Task<RoleDto> UpdateAsync(Guid id, UpdateRoleDto dto, AuditContext audit, CancellationToken ct = default);
     Task DeleteAsync(Guid id, AuditContext audit, CancellationToken ct = default);
+
+    Task<IReadOnlyList<PermissionDto>> GetAllPermissionsAsync(CancellationToken ct = default);
+    Task<RoleDto> UpdatePermissionsAsync(Guid id, UpdateRolePermissionsDto dto, AuditContext audit, CancellationToken ct = default);
 }
 
 public interface IAuthService

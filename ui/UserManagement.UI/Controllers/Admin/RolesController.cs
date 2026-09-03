@@ -5,7 +5,7 @@ using UserManagement.UI.ViewModels.Admin;
 
 namespace UserManagement.UI.Controllers.Admin;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "RolesManage")]
 [Route("Admin/Roles")]
 public class RolesController : Controller
 {
@@ -72,6 +72,36 @@ public class RolesController : Controller
         {
             await _roleApi.DeleteAsync(id, ct);
             return Json(new { success = true });
+        }
+        catch (ApiException ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpGet("{id:guid}/Permissions")]
+    public async Task<IActionResult> Permissions(Guid id, CancellationToken ct)
+    {
+        var role = await _roleApi.GetByIdAsync(id, ct);
+        var allPermissions = await _roleApi.GetAllPermissionsAsync(ct);
+        return PartialView("_RolePermissionsModal", new RolePermissionsViewModel
+        {
+            RoleId = role.Id,
+            RoleName = role.Name,
+            AllPermissions = allPermissions,
+            AssignedPermissions = role.Permissions
+        });
+    }
+
+    [HttpPost("{id:guid}/Permissions")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Permissions(Guid id, [FromForm] List<string> permissions, CancellationToken ct)
+    {
+        try
+        {
+            var role = await _roleApi.UpdatePermissionsAsync(id,
+                new Contracts.UpdateRolePermissionsRequest { Permissions = permissions ?? new List<string>() }, ct);
+            return Json(new { success = true, role });
         }
         catch (ApiException ex)
         {
