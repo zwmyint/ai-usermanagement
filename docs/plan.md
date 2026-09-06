@@ -207,7 +207,10 @@ dotnet publish ui/UserManagement.UI/UserManagement.UI.csproj  -c Release -o C:\i
 - UI login → dashboard → user list loads via DataTables.
 
 **Scaling note**
-SQLite is file-based and single-writer; suitable for this scope. Repositories/`AppDbContext` are provider-agnostic, so switching to PostgreSQL/SQL Server later is a provider package + connection string + regenerated migrations change only.
+SQLite is file-based and single-writer; suitable for small deployments. The API now supports
+SQLite and PostgreSQL through `Database:Provider`. Repositories and application services remain
+provider-agnostic, while each provider has its own EF Core migration set. Switching providers does
+not synchronize or transfer existing data.
 
 ---
 

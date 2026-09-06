@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\UserManagement.Application\UserManagement.Application.csproj" />
     <ProjectReference Include="..\UserManagement.Infrastructure\UserManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\UserManagement.Infrastructure.PostgreSqlMigrations\UserManagement.Infrastructure.PostgreSqlMigrations.csproj" />
   </ItemGroup>
 
 </Project>

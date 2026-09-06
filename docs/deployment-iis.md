@@ -35,8 +35,8 @@ C:\inetpub\usermanagement\api\
 C:\inetpub\usermanagement\ui\
 ```
 
-Each folder needs a writable `App_Data` subfolder (create it if missing) for the SQLite database,
-Serilog file logs, and persisted Data Protection keys:
+Each folder needs a writable `App_Data` subfolder (create it if missing) for the SQLite database
+when SQLite is selected, Serilog file logs, and persisted Data Protection keys:
 
 ```powershell
 New-Item -ItemType Directory -Path C:\inetpub\usermanagement\api\App_Data\logs -Force
@@ -93,6 +93,9 @@ appcmd.exe set config "UserManagementApi/" -section:system.webServer/aspNetCore 
 appcmd.exe set config "UserManagementApi/" -section:system.webServer/aspNetCore /+"environmentVariables.[name='Smtp__UserName',value='...']" /commit:apphost
 appcmd.exe set config "UserManagementApi/" -section:system.webServer/aspNetCore /+"environmentVariables.[name='Smtp__Password',value='...']" /commit:apphost
 appcmd.exe set config "UserManagementApi/" -section:system.webServer/aspNetCore /+"environmentVariables.[name='Cors__AllowedOrigins__0',value='https://usermanagement.local']" /commit:apphost
+# Select PostgreSQL instead of SQLite. Store the password in a secret-management system where possible.
+appcmd.exe set config "UserManagementApi/" -section:system.webServer/aspNetCore /+"environmentVariables.[name='Database__Provider',value='PostgreSql']" /commit:apphost
+appcmd.exe set config "UserManagementApi/" -section:system.webServer/aspNetCore /+"environmentVariables.[name='ConnectionStrings__PostgreSql',value='Host=db.example.com;Port=5432;Database=usermanagement;Username=usermanagement;Password=...']" /commit:apphost
 
 # UI pool — required
 appcmd.exe set config "UserManagementUi/" -section:system.webServer/aspNetCore /+"environmentVariables.[name='ASPNETCORE_ENVIRONMENT',value='Production']" /commit:apphost
@@ -110,9 +113,10 @@ these files are checked into source control as *templates* with blank secrets.
 
 The API applies pending EF Core migrations and seeds the `Admin`/`User` roles (and an optional
 default admin, if `Seed:AdminPassword` is set) automatically on startup — no manual `dotnet ef
-database update` step is required in production. On first request, confirm the database file was
-created at `App_Data\usermanagement.db` and check `App_Data\logs\api-*.log` for the seeding
-messages.
+database update` step is required in production. With SQLite selected, confirm the database file
+was created at `App_Data\usermanagement.db`; with PostgreSQL selected, verify the
+`__EFMigrationsHistory` table and application tables in the configured database. Check
+`App_Data\logs\api-*.log` for the seeding messages.
 
 **Change the seeded admin password immediately after first login**, then consider removing
 `Seed__AdminPassword` from the app pool configuration (seeding is idempotent — it only creates the
@@ -127,6 +131,18 @@ account if it does not already exist).
   **Users / Roles / Audit Logs** are reachable and populated.
 
 ## 8. Notes & hardening
+
+### Database provider selection
+
+The API supports `Sqlite` (the default) and `PostgreSql`. Set `Database__Provider` and the
+matching connection string (`ConnectionStrings__Sqlite` or `ConnectionStrings__PostgreSql`) as
+environment variables. The PostgreSQL migration baseline is kept in the
+`UserManagement.Infrastructure.PostgreSqlMigrations` assembly; SQLite uses the existing
+Infrastructure migrations. Switching providers does not copy data. For an existing SQLite
+deployment, back up the `.db` file (including `-wal`/`-shm` when present), export/import the
+application data into PostgreSQL, verify relationships and login, and only then switch the API
+configuration. To roll back, stop the API, restore the previous provider configuration and its
+database backup, and verify the API before reopening traffic.
 
 - **HTTPS only.** Both apps call `UseHsts()`/`UseHttpsRedirection()` outside Development; make sure
   IIS bindings terminate TLS (or forward `X-Forwarded-Proto` if TLS is terminated upstream by a

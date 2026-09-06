@@ -78,12 +78,18 @@ Both apps read from `appsettings.json` → `appsettings.{Environment}.json` → 
 
 - **API** — `Jwt` (signing key/issuer/audience/lifetimes), `Smtp` (password-reset email delivery),
   `Security` (lockout policy, reset-token TTL, reset URL), `Seed` (default roles/admin), `Cors`
-  (must include the UI's origin), `ConnectionStrings:DefaultConnection` (SQLite file path).
+  (must include the UI's origin), and `Database:Provider` (`Sqlite` or `PostgreSql`) with the
+  matching `ConnectionStrings:Sqlite` or `ConnectionStrings:PostgreSql` value.
 - **UI** — `Api:BaseUrl` (the API's base URL).
 
 `Jwt:Key` must be at least 32 UTF-8 bytes; the API throws on startup otherwise. Never commit real
 secrets — the checked-in `appsettings.Production.json` files are templates with blank secret values,
 intended to be filled in via IIS app-pool environment variables (see the deployment doc).
+
+For PostgreSQL, set `Database__Provider=PostgreSql` and provide
+`ConnectionStrings__PostgreSql` through the environment or a secret store. Switching providers
+does not transfer existing data; follow [the database provider plan](docs/postgresql-switching-plan.md)
+before changing an existing deployment.
 
 ## Building and testing
 

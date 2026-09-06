@@ -1,5 +1,14 @@
 namespace UserManagement.Application.Common.Settings;
 
+public class DatabaseSettings
+{
+    public const string SectionName = "Database";
+    public const string SqliteProvider = "Sqlite";
+    public const string PostgreSqlProvider = "PostgreSql";
+
+    public string Provider { get; set; } = SqliteProvider;
+}
+
 public class JwtSettings
 {
     public const string SectionName = "Jwt";

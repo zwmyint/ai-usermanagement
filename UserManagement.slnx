@@ -4,6 +4,7 @@
     <Project Path="src/UserManagement.Application/UserManagement.Application.csproj" />
     <Project Path="src/UserManagement.Domain/UserManagement.Domain.csproj" />
     <Project Path="src/UserManagement.Infrastructure/UserManagement.Infrastructure.csproj" />
+    <Project Path="src/UserManagement.Infrastructure.PostgreSqlMigrations/UserManagement.Infrastructure.PostgreSqlMigrations.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/UserManagement.API.IntegrationTests/UserManagement.API.IntegrationTests.csproj" />
