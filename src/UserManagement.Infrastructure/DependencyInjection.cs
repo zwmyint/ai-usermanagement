@@ -26,22 +26,23 @@ public static class DependencyInjection
         services.Configure<CorsSettings>(configuration.GetSection(CorsSettings.SectionName));
         services.Configure<ProfilePictureSettings>(configuration.GetSection(ProfilePictureSettings.SectionName));
 
-        var provider = configuration.GetValue<string>($"{DatabaseSettings.SectionName}:Provider")
-            ?? DatabaseSettings.SqliteProvider;
-        var normalizedProvider = provider.Trim().ToLowerInvariant();
-        var connectionName = normalizedProvider switch
+        var useConnection = configuration.GetValue<string>($"{DatabaseSettings.SectionName}:UseConnection")
+            ?? "DefaultConnectionSQLite";
+        var normalizedConnection = useConnection.Trim().ToLowerInvariant();
+        var (provider, connectionName) = normalizedConnection switch
         {
-            "sqlite" => "Sqlite",
-            "postgresql" or "postgres" => "PostgreSql",
+            "defaultconnectionsqlite" => ("sqlite", "Sqlite"),
+            "defaultconnectionpostgresql" => ("postgresql", "PostgreSql"),
             _ => throw new InvalidOperationException(
-                $"Unsupported database provider '{provider}'. Supported values are 'Sqlite' and 'PostgreSql'.")
+                $"Unsupported Database:UseConnection value '{useConnection}'. Supported values are 'DefaultConnectionSQLite' and 'DefaultConnectionPostgreSQL'.")
         };
-        var connectionString = configuration.GetConnectionString(connectionName)
-            ?? (connectionName == "Sqlite" ? configuration.GetConnectionString("DefaultConnection") : null);
+        
+        var connectionString = configuration.GetValue<string>($"{DatabaseSettings.SectionName}:Connections:{useConnection}")
+            ?? configuration.GetConnectionString(connectionName);
 
         if (string.IsNullOrWhiteSpace(connectionString))
             throw new InvalidOperationException(
-                $"ConnectionStrings:{connectionName} must be configured when Database:Provider is '{provider}'.");
+                $"Database:Connections:{useConnection} or ConnectionStrings:{connectionName} must be configured.");
 
         services.AddDbContext<AppDbContext>(options =>
         {
